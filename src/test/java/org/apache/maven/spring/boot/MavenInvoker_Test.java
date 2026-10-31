@@ -35,8 +35,17 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class MavenInvoker_Test {
 
-	private static final String MAVEN_HOME = System.getProperty("maven.home",
-			System.getenv("M2_HOME") != null ? System.getenv("M2_HOME") : "/opt/homebrew/Cellar/maven/3.9.16/libexec");
+	private static final String MAVEN_HOME = System.getProperty("maven.home", System.getenv("M2_HOME"));
+
+	private static File mavenExecutableOnPath() {
+		for (String dir : System.getenv("PATH").split(File.pathSeparator)) {
+			File candidate = new File(dir, "mvn");
+			if (candidate.isFile() && candidate.canExecute()) {
+				return candidate;
+			}
+		}
+		throw new IllegalStateException("Maven executable not found on PATH");
+	}
 
 	@Test
 	void testInvokerCreation() {
@@ -65,7 +74,11 @@ class MavenInvoker_Test {
 				"-DrepositoryId=releases"));
 
 		Invoker invoker = new DefaultInvoker();
-		invoker.setMavenHome(new File(MAVEN_HOME));
+		if (MAVEN_HOME != null) {
+			invoker.setMavenHome(new File(MAVEN_HOME));
+		} else {
+			invoker.setMavenExecutable(mavenExecutableOnPath());
+		}
 		try {
 			InvocationResult result = invoker.execute(request);
 			assertThat(result).isNotNull();
@@ -81,7 +94,11 @@ class MavenInvoker_Test {
 		request.setGoals(Arrays.asList("validate"));
 
 		Invoker invoker = new DefaultInvoker();
-		invoker.setMavenHome(new File(MAVEN_HOME));
+		if (MAVEN_HOME != null) {
+			invoker.setMavenHome(new File(MAVEN_HOME));
+		} else {
+			invoker.setMavenExecutable(mavenExecutableOnPath());
+		}
 		try {
 			InvocationResult result = invoker.execute(request);
 			assertThat(result).isNotNull();
