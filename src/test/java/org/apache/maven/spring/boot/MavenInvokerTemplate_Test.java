@@ -46,8 +46,17 @@ class MavenInvokerTemplate_Test {
 	InvocationOutputHandler errorHandler = new PrintStreamHandler(System.err, false);
 	InvokerLogger invokerLogger = new SystemOutLogger();
 
-	private static final String MAVEN_HOME = System.getProperty("maven.home",
-			System.getenv("M2_HOME") != null ? System.getenv("M2_HOME") : "/opt/homebrew/Cellar/maven/3.9.16/libexec");
+	private static final String MAVEN_HOME = System.getProperty("maven.home", System.getenv("M2_HOME"));
+
+	private static File mavenExecutableOnPath() {
+		for (String dir : System.getenv("PATH").split(File.pathSeparator)) {
+			File candidate = new File(dir, "mvn");
+			if (candidate.isFile() && candidate.canExecute()) {
+				return candidate;
+			}
+		}
+		throw new IllegalStateException("Maven executable not found on PATH");
+	}
 
 	public Invoker mavenInvoker(MavenInvokerProperties properties) {
 
@@ -82,6 +91,8 @@ class MavenInvokerTemplate_Test {
 		// Maven.
 		if (StringUtils.hasText(properties.getMavenHome())) {
 			invoker.setMavenHome(new File(properties.getMavenHome()));
+		} else {
+			invoker.setMavenExecutable(mavenExecutableOnPath());
 		}
 		// Sets the handler used to capture the standard output from the Maven build.
 		invoker.setOutputHandler(outputHandler);
