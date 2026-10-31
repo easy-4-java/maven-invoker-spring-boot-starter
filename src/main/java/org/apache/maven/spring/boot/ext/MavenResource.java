@@ -39,6 +39,18 @@ public class MavenResource {
 
 	private final String classifier;
 
+	private final String version;
+
+	private final String filepath;
+
+	private final boolean generatePom;
+
+	private final boolean createChecksum;
+
+	private String repositoryUrl;
+
+	private String repositoryId;
+
 	private MavenResource(String filepath, String groupId, String artifactId, String extension, String classifier,
 			String version, boolean generatePom, boolean createChecksum, String repositoryUrl, String repositoryId) {
 		Assert.hasText(filepath, "filepath must not be blank");
